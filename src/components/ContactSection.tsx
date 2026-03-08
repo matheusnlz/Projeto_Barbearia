@@ -42,7 +42,7 @@ const ContactSection = () => {
 
           <div className="rounded-lg overflow-hidden border border-border h-[300px] md:h-full min-h-[300px]">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.1976890741!2d-46.6522202!3d-23.5505199!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDMzJzAxLjkiUyA0NsKwMzknMDguMCJX!5e0!3m2!1spt-BR!2sbr!4v1600000000000!5m2!1spt-BR!2sbr"
+              src="https://maps.app.goo.gl/fkr37T3Mcn7N8F9Y9?g_st=ic"
               width="100%"
               height="100%"
               style={{ border: 0 }}

@@ -37,11 +37,11 @@ const Footer = () => {
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4 text-primary" />
-                (11) 99999-9999
+                (11) 93002-2620
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4 text-primary" />
-                Rua Exemplo, 123 - Centro
+                Rua Álvaro Alvim, 519 - Paulicéia, São Bernardo do Campo - SP
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 text-primary" />

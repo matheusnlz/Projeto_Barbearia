@@ -14,8 +14,8 @@ const ContactSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <div className="space-y-6">
             {[
-              { icon: Phone, title: "Telefone", value: "(11) 99999-9999" },
-              { icon: MapPin, title: "Endereço", value: "Rua Exemplo, 123 - Centro, São Paulo - SP" },
+              { icon: Phone, title: "Telefone", value: "(11) 93002-2620" },
+              { icon: MapPin, title: "Endereço", value: "Rua Álvaro Alvim, 519 - Paulicéia, São Bernardo do Campo - SP, 09693-000" },
               { icon: Clock, title: "Horário", value: "Seg-Sáb: 9h às 20h" },
             ].map((item) => (
               <div key={item.title} className="flex items-start gap-4 p-4 bg-card rounded-lg border border-border">

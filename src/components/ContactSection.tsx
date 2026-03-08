@@ -42,13 +42,14 @@ const ContactSection = () => {
 
           <div className="rounded-lg overflow-hidden border border-border h-[300px] md:h-full min-h-[300px]">
             <iframe
-              src="https://maps.app.goo.gl/fkr37T3Mcn7N8F9Y9?g_st=ic"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3654.5!2d-46.58!3d-23.71!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zUnVhIMOBbHZhcm8gQWx2aW0sIDUxOSAtIFBhdWxpY8OpaWEsIFPDo28gQmVybmFyZG8gZG8gQ2FtcG8gLSBTUCwgMDk2OTMtMDAw!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
               width="100%"
               height="100%"
               style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
-              title="Localização da Barbearia"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Localização da Barbearia - Rua Álvaro Alvim, 519 - Paulicéia, São Bernardo do Campo"
             />
           </div>
         </div>

@@ -18,7 +18,7 @@ interface Appointment {
   createdAt: string;
 }
 
-const ADMIN_PASS = "seujota2026";
+const ADMIN_PASS = "seujota2024";
 
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);

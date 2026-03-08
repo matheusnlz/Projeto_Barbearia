@@ -1,56 +1,223 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
-import { Trash2, Edit2, Lock, LogIn } from "lucide-react";
+import { Trash2, Edit2, Lock, LogIn, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { defaultServices, type Service } from "@/data/services";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Appointment {
   id: string;
-  serviceId: string;
-  serviceName: string;
-  date: string;
-  time: string;
-  clientName: string;
-  clientPhone: string;
+  service_id: string;
+  service_name: string;
+  appointment_date: string;
+  appointment_time: string;
+  client_name: string;
+  client_phone: string;
   status: string;
-  createdAt: string;
+  created_at: string;
 }
 
 const ADMIN_PASS = "seujota2024";
 
-const Admin = () => {
-  const [authenticated, setAuthenticated] = useState(false);
+const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
   const [password, setPassword] = useState("");
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [services, setServices] = useState<Service[]>(defaultServices);
-  const [activeTab, setActiveTab] = useState<"appointments" | "services">("appointments");
-  const [editingService, setEditingService] = useState<string | null>(null);
-  const [editPrice, setEditPrice] = useState("");
-
-  useEffect(() => {
-    if (authenticated) {
-      const data = JSON.parse(localStorage.getItem("appointments") || "[]");
-      setAppointments(data);
-    }
-  }, [authenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === ADMIN_PASS) {
-      setAuthenticated(true);
+      onLogin();
       toast.success("Bem-vindo, administrador!");
     } else {
       toast.error("Senha incorreta");
     }
   };
 
-  const deleteAppointment = (id: string) => {
-    const updated = appointments.filter((a) => a.id !== id);
-    setAppointments(updated);
-    localStorage.setItem("appointments", JSON.stringify(updated));
-    toast.success("Agendamento removido");
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="pt-28 pb-20 container mx-auto px-4 max-w-sm">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="font-display text-2xl font-bold">Área Administrativa</h1>
+          <p className="text-muted-foreground text-sm mt-2">Acesso restrito ao administrador</p>
+        </div>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Senha de acesso"
+            className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
+          >
+            <LogIn className="h-4 w-4" /> Entrar
+          </button>
+        </form>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+const AppointmentsList = ({
+  appointments,
+  loading,
+  onDelete,
+}: {
+  appointments: Appointment[];
+  loading: boolean;
+  onDelete: (id: string) => void;
+}) => {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+        Carregando agendamentos...
+      </div>
+    );
+  }
+
+  if (appointments.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        Nenhum agendamento encontrado
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {appointments.map((apt) => (
+        <div
+          key={apt.id}
+          className="bg-card border border-border rounded-lg p-4 flex items-center justify-between"
+        >
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <span className="font-semibold">{apt.client_name}</span>
+              <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">
+                {apt.service_name}
+              </span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {apt.appointment_date} às {apt.appointment_time} · {apt.client_phone}
+            </div>
+          </div>
+          <button
+            onClick={() => onDelete(apt.id)}
+            className="text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-colors"
+            title="Cancelar agendamento"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const ServicesList = ({
+  services,
+  editingService,
+  editPrice,
+  onEdit,
+  onSave,
+  onEditPriceChange,
+}: {
+  services: Service[];
+  editingService: string | null;
+  editPrice: string;
+  onEdit: (id: string, price: number) => void;
+  onSave: (id: string) => void;
+  onEditPriceChange: (val: string) => void;
+}) => (
+  <div className="space-y-3">
+    {services.map((service) => (
+      <div
+        key={service.id}
+        className="bg-card border border-border rounded-lg p-4 flex items-center justify-between"
+      >
+        <div>
+          <span className="font-semibold">{service.name}</span>
+          <span className="text-muted-foreground text-sm ml-3">{service.duration} min</span>
+        </div>
+        <div className="flex items-center gap-3">
+          {editingService === service.id ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={editPrice}
+                onChange={(e) => onEditPriceChange(e.target.value)}
+                className="w-20 p-1.5 rounded border border-border bg-background text-sm text-foreground focus:border-primary focus:outline-none"
+              />
+              <button onClick={() => onSave(service.id)} className="text-primary text-sm font-semibold">
+                Salvar
+              </button>
+            </div>
+          ) : (
+            <>
+              <span className="text-primary font-bold">R$ {service.price}</span>
+              <button
+                onClick={() => onEdit(service.id, service.price)}
+                className="text-muted-foreground hover:text-primary p-2 rounded-lg transition-colors"
+              >
+                <Edit2 className="h-4 w-4" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const Admin = () => {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [services, setServices] = useState<Service[]>(defaultServices);
+  const [activeTab, setActiveTab] = useState<"appointments" | "services">("appointments");
+  const [editingService, setEditingService] = useState<string | null>(null);
+  const [editPrice, setEditPrice] = useState("");
+
+  const fetchAppointments = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*")
+      .order("appointment_date", { ascending: true })
+      .order("appointment_time", { ascending: true });
+
+    if (error) {
+      toast.error("Erro ao carregar agendamentos");
+      console.error(error);
+    } else {
+      setAppointments(data as Appointment[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (authenticated) {
+      fetchAppointments();
+    }
+  }, [authenticated]);
+
+  const deleteAppointment = async (id: string) => {
+    const { error } = await supabase.from("appointments").delete().eq("id", id);
+    if (error) {
+      toast.error("Erro ao cancelar agendamento");
+      console.error(error);
+    } else {
+      setAppointments((prev) => prev.filter((a) => a.id !== id));
+      toast.success("Agendamento cancelado — horário liberado!");
+    }
   };
 
   const updateServicePrice = (id: string) => {
@@ -62,36 +229,7 @@ const Admin = () => {
   };
 
   if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="pt-28 pb-20 container mx-auto px-4 max-w-sm">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lock className="h-8 w-8 text-primary" />
-            </div>
-            <h1 className="font-display text-2xl font-bold">Área Administrativa</h1>
-            <p className="text-muted-foreground text-sm mt-2">Acesso restrito ao administrador</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Senha de acesso"
-              className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
-            >
-              <LogIn className="h-4 w-4" /> Entrar
-            </button>
-          </form>
-        </div>
-        <Footer />
-      </div>
-    );
+    return <AdminLogin onLogin={() => setAuthenticated(true)} />;
   }
 
   return (
@@ -126,86 +264,26 @@ const Admin = () => {
             ))}
           </div>
 
-          {/* Appointments */}
           {activeTab === "appointments" && (
-            <div className="space-y-3">
-              {appointments.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  Nenhum agendamento encontrado
-                </div>
-              ) : (
-                appointments.map((apt) => (
-                  <div
-                    key={apt.id}
-                    className="bg-card border border-border rounded-lg p-4 flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold">{apt.clientName}</span>
-                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">{apt.serviceName}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {apt.date} às {apt.time} · {apt.clientPhone}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => deleteAppointment(apt.id)}
-                      className="text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+            <AppointmentsList
+              appointments={appointments}
+              loading={loading}
+              onDelete={deleteAppointment}
+            />
           )}
 
-          {/* Services */}
           {activeTab === "services" && (
-            <div className="space-y-3">
-              {services.map((service) => (
-                <div
-                  key={service.id}
-                  className="bg-card border border-border rounded-lg p-4 flex items-center justify-between"
-                >
-                  <div>
-                    <span className="font-semibold">{service.name}</span>
-                    <span className="text-muted-foreground text-sm ml-3">{service.duration} min</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {editingService === service.id ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={editPrice}
-                          onChange={(e) => setEditPrice(e.target.value)}
-                          className="w-20 p-1.5 rounded border border-border bg-background text-sm text-foreground focus:border-primary focus:outline-none"
-                        />
-                        <button
-                          onClick={() => updateServicePrice(service.id)}
-                          className="text-primary text-sm font-semibold"
-                        >
-                          Salvar
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="text-primary font-bold">R$ {service.price}</span>
-                        <button
-                          onClick={() => {
-                            setEditingService(service.id);
-                            setEditPrice(service.price.toString());
-                          }}
-                          className="text-muted-foreground hover:text-primary p-2 rounded-lg transition-colors"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ServicesList
+              services={services}
+              editingService={editingService}
+              editPrice={editPrice}
+              onEdit={(id, price) => {
+                setEditingService(id);
+                setEditPrice(price.toString());
+              }}
+              onSave={updateServicePrice}
+              onEditPriceChange={setEditPrice}
+            />
           )}
         </div>
       </section>

@@ -3,10 +3,10 @@ import { Scissors, Sparkles, Sun, Layers } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const services = [
-  { icon: Scissors, title: "Corte", price: "R$ 35", description: "Corte moderno personalizado" },
-  { icon: Sparkles, title: "Barba", price: "R$ 25", description: "Alinhamento e hidratação" },
-  { icon: Sun, title: "Luzes", price: "R$ 80", description: "Coloração e mechas" },
-  { icon: Layers, title: "Corte + Barba", price: "R$ 55", description: "Combo completo" },
+  { icon: Scissors, title: "Corte", price: "R$ 40", description: "Corte moderno personalizado" },
+  { icon: Sparkles, title: "Barba", price: "R$ 30", description: "Alinhamento e hidratação" },
+  { icon: Sun, title: "Luzes", price: "R$ 70", description: "Coloração e mechas" },
+  { icon: Layers, title: "Corte + Barba", price: "R$ 70", description: "Combo completo" },
 ];
 
 const ServicesPreview = () => {

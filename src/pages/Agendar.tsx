@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Check } from "lucide-react";
+import { CalendarIcon, Check, Loader2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -11,11 +11,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-const timeSlots = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-  "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
+const ALL_TIME_SLOTS = [
+  "09:00", "10:00", "11:00", "12:00", "13:00",
+  "14:00", "15:00", "16:00", "17:00", "18:00", "19:00",
 ];
 
 const Agendar = () => {
@@ -28,29 +28,67 @@ const Agendar = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch booked slots when date changes
+  useEffect(() => {
+    if (!date) return;
+    setTime("");
+    setLoadingSlots(true);
+
+    const dateStr = format(date, "yyyy-MM-dd");
+    supabase
+      .from("appointments")
+      .select("appointment_time")
+      .eq("appointment_date", dateStr)
+      .eq("status", "confirmed")
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error fetching slots:", error);
+          setBookedSlots([]);
+        } else {
+          setBookedSlots((data || []).map((r) => r.appointment_time));
+        }
+        setLoadingSlots(false);
+      });
+  }, [date]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService || !date || !time || !name || !phone) {
       toast.error("Preencha todos os campos");
       return;
     }
 
-    // Save to localStorage for now (will be replaced with DB)
-    const appointments = JSON.parse(localStorage.getItem("appointments") || "[]");
+    setSubmitting(true);
     const service = defaultServices.find((s) => s.id === selectedService);
-    appointments.push({
-      id: Date.now().toString(),
-      serviceId: selectedService,
-      serviceName: service?.name,
-      date: format(date, "yyyy-MM-dd"),
-      time,
-      clientName: name,
-      clientPhone: phone,
+    const dateStr = format(date, "yyyy-MM-dd");
+
+    const { error } = await supabase.from("appointments").insert({
+      service_id: selectedService,
+      service_name: service?.name || "",
+      appointment_date: dateStr,
+      appointment_time: time,
+      client_name: name,
+      client_phone: phone,
       status: "confirmed",
-      createdAt: new Date().toISOString(),
     });
-    localStorage.setItem("appointments", JSON.stringify(appointments));
+
+    setSubmitting(false);
+
+    if (error) {
+      if (error.code === "23505") {
+        toast.error("Este horário já foi reservado. Escolha outro.");
+        setBookedSlots((prev) => [...prev, time]);
+        setTime("");
+      } else {
+        toast.error("Erro ao agendar. Tente novamente.");
+        console.error(error);
+      }
+      return;
+    }
 
     setSubmitted(true);
     toast.success("Agendamento confirmado!");
@@ -74,7 +112,15 @@ const Agendar = () => {
           </p>
           <p className="text-muted-foreground text-sm mb-8">Esperamos você, {name}!</p>
           <button
-            onClick={() => { setSubmitted(false); setSelectedService(""); setDate(undefined); setTime(""); setName(""); setPhone(""); }}
+            onClick={() => {
+              setSubmitted(false);
+              setSelectedService("");
+              setDate(undefined);
+              setTime("");
+              setName("");
+              setPhone("");
+              setBookedSlots([]);
+            }}
             className="bg-gold-gradient text-primary-foreground px-8 py-3 rounded-sm text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
           >
             Novo Agendamento
@@ -157,23 +203,41 @@ const Agendar = () => {
             {date && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
                 <label className="block text-sm font-semibold mb-3 uppercase tracking-wider">Horário</label>
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                  {timeSlots.map((slot) => (
-                    <button
-                      type="button"
-                      key={slot}
-                      onClick={() => setTime(slot)}
-                      className={cn(
-                        "py-2 rounded-md border text-sm font-medium transition-all",
-                        time === slot
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-foreground hover:border-primary/30"
-                      )}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                </div>
+                {loadingSlots ? (
+                  <div className="flex items-center justify-center py-6 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    Carregando horários...
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                    {ALL_TIME_SLOTS.map((slot) => {
+                      const isBooked = bookedSlots.includes(slot);
+                      return (
+                        <button
+                          type="button"
+                          key={slot}
+                          disabled={isBooked}
+                          onClick={() => setTime(slot)}
+                          className={cn(
+                            "py-2 rounded-md border text-sm font-medium transition-all",
+                            isBooked
+                              ? "border-border bg-muted text-muted-foreground opacity-50 cursor-not-allowed line-through"
+                              : time === slot
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-card text-foreground hover:border-primary/30"
+                          )}
+                        >
+                          {slot}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {bookedSlots.length > 0 && !loadingSlots && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Horários riscados já estão reservados
+                  </p>
+                )}
               </motion.div>
             )}
 
@@ -203,9 +267,11 @@ const Agendar = () => {
 
             <button
               type="submit"
-              className="w-full bg-gold-gradient text-primary-foreground py-4 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-4 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              Confirmar Agendamento
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {submitting ? "Agendando..." : "Confirmar Agendamento"}
             </button>
           </form>
         </div>

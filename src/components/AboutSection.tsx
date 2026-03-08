@@ -39,12 +39,12 @@ const AboutSection = () => {
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               A Barbearia Seu Jota nasceu da paixão por transformar o visual masculino. 
-              Há mais de 10 anos, oferecemos cortes modernos, cuidados com a barba e 
+              Há mais de 6 anos nesse ramo, oferecemos cortes modernos, cuidados com a barba e 
               uma experiência única para cada cliente.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-6">
               Nosso compromisso é com a qualidade, o atendimento personalizado e a 
-              satisfação de cada homem que passa pela nossa cadeira. Aqui, cada corte 
+              satisfação de cada pessoa que passa pela nossa barbearia. Aqui, cada corte 
               é uma obra de arte.
             </p>
             <div className="grid grid-cols-3 gap-4">
@@ -67,3 +67,4 @@ const AboutSection = () => {
 };
 
 export default AboutSection;
+

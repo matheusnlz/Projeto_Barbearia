@@ -30,7 +30,7 @@ const ContactSection = () => {
             ))}
 
             <a
-              href="https://wa.me/5511999999999"
+              href="https://wa.me/5511930022620"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full bg-gold-gradient text-primary-foreground py-3 rounded-lg font-semibold text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"

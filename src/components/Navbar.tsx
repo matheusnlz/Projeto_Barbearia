@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Scissors } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import logo from "@/assets/logo-seu-jota.png";
 
 const navItems = [
   { label: "Início", href: "/" },
@@ -17,8 +18,8 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-dark border-b border-border">
       <div className="container mx-auto px-4 flex items-center justify-between h-16 md:h-20">
-        <Link to="/" className="flex items-center gap-2">
-          <Scissors className="h-6 w-6 text-primary" />
+        <Link to="/" className="flex items-center gap-3">
+          <img src={logo} alt="Barbearia Seu Jota" className="h-12 w-12 rounded-full object-cover" />
           <span className="font-display text-xl font-bold text-foreground">
             Seu <span className="text-gold-gradient">Jota</span>
           </span>
@@ -39,7 +40,7 @@ const Navbar = () => {
           ))}
           <Link
             to="/agendar"
-            className="bg-gold-gradient text-primary-foreground px-6 py-2 rounded-sm text-sm font-semibold uppercase tracking-wider hover:opacity-90 transition-opacity"
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-sm text-sm font-semibold uppercase tracking-wider hover:opacity-90 transition-opacity"
           >
             Agendar
           </Link>

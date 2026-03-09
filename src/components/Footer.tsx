@@ -1,5 +1,6 @@
-import { Scissors, Phone, MapPin, Clock } from "lucide-react";
+import { Phone, MapPin, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo-seu-jota.png";
 
 const Footer = () => {
   return (
@@ -7,8 +8,8 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Scissors className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-3 mb-4">
+              <img src={logo} alt="Barbearia Seu Jota" className="h-10 w-10 rounded-full object-cover" />
               <span className="font-display text-lg font-bold">
                 Barbearia Seu <span className="text-gold-gradient">Jota</span>
               </span>

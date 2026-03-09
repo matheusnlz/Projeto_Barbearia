@@ -6,25 +6,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 7%;
-    --foreground: 40 20% 90%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
 
-    --card: 0 0% 10%;
-    --card-foreground: 40 20% 90%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 40 20% 90%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 43 74% 49%;
+    --primary: 0 0% 100%;
     --primary-foreground: 0 0% 5%;
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 40 20% 85%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 85%;
 
     --muted: 0 0% 14%;
     --muted-foreground: 0 0% 55%;
 
-    --accent: 43 74% 49%;
+    --accent: 0 0% 100%;
     --accent-foreground: 0 0% 5%;
 
     --destructive: 0 62.8% 50%;
@@ -32,22 +32,22 @@
 
     --border: 0 0% 18%;
     --input: 0 0% 18%;
-    --ring: 43 74% 49%;
+    --ring: 0 0% 100%;
 
     --radius: 0.5rem;
 
-    --gold: 43 74% 49%;
-    --gold-light: 43 74% 65%;
-    --gold-dark: 43 74% 35%;
+    --gold: 0 0% 100%;
+    --gold-light: 0 0% 85%;
+    --gold-dark: 0 0% 70%;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 40 20% 90%;
-    --sidebar-primary: 43 74% 49%;
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 0% 100%;
     --sidebar-primary-foreground: 0 0% 5%;
     --sidebar-accent: 0 0% 14%;
-    --sidebar-accent-foreground: 40 20% 90%;
+    --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 43 74% 49%;
+    --sidebar-ring: 0 0% 100%;
 
     --font-display: 'Playfair Display', serif;
     --font-body: 'Raleway', sans-serif;
@@ -71,26 +71,26 @@
 
 @layer utilities {
   .text-gold-gradient {
-    background: linear-gradient(135deg, hsl(43 74% 49%), hsl(43 74% 65%));
+    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 75%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .bg-gold-gradient {
-    background: linear-gradient(135deg, hsl(43 74% 49%), hsl(43 74% 35%));
+    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 85%));
   }
 
   .border-gold {
-    border-color: hsl(43 74% 49%);
+    border-color: hsl(0 0% 100%);
   }
 
   .shadow-gold {
-    box-shadow: 0 0 30px -10px hsl(43 74% 49% / 0.3);
+    box-shadow: 0 0 30px -10px hsl(0 0% 100% / 0.15);
   }
 
   .glass-dark {
-    background: hsl(0 0% 7% / 0.8);
+    background: hsl(0 0% 5% / 0.85);
     backdrop-filter: blur(20px);
   }
 }
@@ -100,12 +100,12 @@
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(0 0% 7%);
+  background: hsl(0 0% 5%);
 }
 ::-webkit-scrollbar-thumb {
   background: hsl(0 0% 25%);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(43 74% 49%);
+  background: hsl(0 0% 60%);
 }

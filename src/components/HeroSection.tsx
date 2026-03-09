@@ -35,7 +35,7 @@ const HeroSection = () => {
             Seu <span className="text-gold-gradient">Jota</span>
           </h1>
           <p className="text-muted-foreground text-lg md:text-xl max-w-lg mx-auto mb-10 font-light">
-            Estilo, tradição e qualidade no seu corte
+            Old school, moderno e aconchegante.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

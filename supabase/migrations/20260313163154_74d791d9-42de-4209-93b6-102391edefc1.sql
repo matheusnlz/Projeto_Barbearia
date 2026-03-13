@@ -1,0 +1,1 @@
+ALTER TABLE public.appointments ADD COLUMN client_email text NOT NULL DEFAULT '';

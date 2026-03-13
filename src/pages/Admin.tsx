@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LayoutDashboard, CalendarDays, Users, Scissors, LogOut } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Scissors, LogOut, UserCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdminLogin from "@/components/admin/AdminLogin";
@@ -7,6 +7,7 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminAppointments from "@/components/admin/AdminAppointments";
 import AdminBarberAgenda from "@/components/admin/AdminBarberAgenda";
 import AdminServices from "@/components/admin/AdminServices";
+import AdminClients from "@/components/admin/AdminClients";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -24,13 +25,14 @@ interface Appointment {
   created_at: string;
 }
 
-type Tab = "dashboard" | "appointments" | "barber-agenda" | "services";
+type Tab = "dashboard" | "appointments" | "barber-agenda" | "services" | "clients";
 
 const tabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "appointments", label: "Agendamentos", icon: CalendarDays },
   { key: "barber-agenda", label: "Agenda Barbeiros", icon: Users },
   { key: "services", label: "Serviços", icon: Scissors },
+  { key: "clients", label: "Clientes", icon: UserCheck },
 ];
 
 const Admin = () => {
@@ -123,6 +125,7 @@ const Admin = () => {
           )}
           {activeTab === "barber-agenda" && <AdminBarberAgenda appointments={appointments} />}
           {activeTab === "services" && <AdminServices />}
+          {activeTab === "clients" && <AdminClients />}
         </div>
       </section>
 

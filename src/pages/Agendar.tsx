@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { format, isToday, addHours, setHours, setMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Check, Loader2, User } from "lucide-react";
+import { CalendarIcon, Check, Loader2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { defaultServices } from "@/data/services";
@@ -21,6 +21,22 @@ const ALL_TIME_SLOTS = [
   "18:00","18:30","19:00","19:30",
 ];
 
+const validatePhone = (phone: string) => {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10 || digits.length === 11;
+};
+
+const validateEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
+
 const Agendar = () => {
   const [searchParams] = useSearchParams();
   const preselected = searchParams.get("servico") || "";
@@ -31,12 +47,13 @@ const Agendar = () => {
   const [time, setTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ phone?: string; email?: string }>({});
 
-  // Fetch booked slots when date or barber changes
   useEffect(() => {
     if (!date || !selectedBarber) return;
     setTime("");
@@ -62,7 +79,15 @@ const Agendar = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBarber || !selectedService || !date || !time || !name || !phone) {
+
+    const newErrors: { phone?: string; email?: string } = {};
+    if (!validatePhone(phone)) newErrors.phone = "Digite um telefone válido";
+    if (!validateEmail(email)) newErrors.email = "Digite um e-mail válido";
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) return;
+
+    if (!selectedBarber || !selectedService || !date || !time || !name.trim()) {
       toast.error("Preencha todos os campos");
       return;
     }
@@ -76,8 +101,9 @@ const Agendar = () => {
       service_name: service?.name || "",
       appointment_date: dateStr,
       appointment_time: time,
-      client_name: name,
-      client_phone: phone,
+      client_name: name.trim(),
+      client_phone: phone.replace(/\D/g, ""),
+      client_email: email.trim().toLowerCase(),
       barber_name: selectedBarber,
       status: "confirmed",
     });
@@ -108,11 +134,12 @@ const Agendar = () => {
     setTime("");
     setName("");
     setPhone("");
+    setEmail("");
     setBookedSlots([]);
+    setErrors({});
   };
 
   if (submitted) {
-    const barber = barbers.find((b) => b.name === selectedBarber);
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -264,8 +291,6 @@ const Agendar = () => {
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                     {ALL_TIME_SLOTS.map((slot) => {
                       const isBooked = bookedSlots.includes(slot);
-                      
-                      // For same-day bookings, require 2h minimum advance
                       let isTooSoon = false;
                       if (date && isToday(date)) {
                         const now = new Date();
@@ -274,7 +299,6 @@ const Agendar = () => {
                         const slotTime = setMinutes(setHours(new Date(), h), m);
                         isTooSoon = slotTime <= minTime;
                       }
-                      
                       const isDisabled = isBooked || isTooSoon;
                       return (
                         <button
@@ -318,26 +342,54 @@ const Agendar = () => {
             )}
 
             {/* Client info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-2 uppercase tracking-wider">Nome</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Seu nome"
+                  placeholder="Seu nome completo"
+                  maxLength={100}
                   className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2 uppercase tracking-wider">Telefone</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="(11) 99999-9999"
-                  className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 uppercase tracking-wider">Telefone</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(formatPhone(e.target.value));
+                      if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }));
+                    }}
+                    placeholder="(11) 99999-9999"
+                    className={cn(
+                      "w-full p-3 rounded-lg border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition-colors",
+                      errors.phone ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
+                    )}
+                  />
+                  {errors.phone && <p className="text-destructive text-xs mt-1">{errors.phone}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2 uppercase tracking-wider">E-mail</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                    }}
+                    placeholder="seu@email.com"
+                    maxLength={255}
+                    className={cn(
+                      "w-full p-3 rounded-lg border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition-colors",
+                      errors.email ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
+                    )}
+                  />
+                  {errors.email && <p className="text-destructive text-xs mt-1">{errors.email}</p>}
+                </div>
               </div>
             </div>
 

@@ -25,13 +25,14 @@ interface Appointment {
   created_at: string;
 }
 
-type Tab = "dashboard" | "appointments" | "barber-agenda" | "services";
+type Tab = "dashboard" | "appointments" | "barber-agenda" | "services" | "clients";
 
 const tabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "appointments", label: "Agendamentos", icon: CalendarDays },
   { key: "barber-agenda", label: "Agenda Barbeiros", icon: Users },
   { key: "services", label: "Serviços", icon: Scissors },
+  { key: "clients", label: "Clientes", icon: UserCheck },
 ];
 
 const Admin = () => {

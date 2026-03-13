@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LayoutDashboard, CalendarDays, Users, Scissors, LogOut } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Scissors, LogOut, UserCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdminLogin from "@/components/admin/AdminLogin";
@@ -7,6 +7,7 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminAppointments from "@/components/admin/AdminAppointments";
 import AdminBarberAgenda from "@/components/admin/AdminBarberAgenda";
 import AdminServices from "@/components/admin/AdminServices";
+import AdminClients from "@/components/admin/AdminClients";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";

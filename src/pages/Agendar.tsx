@@ -264,15 +264,27 @@ const Agendar = () => {
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                     {ALL_TIME_SLOTS.map((slot) => {
                       const isBooked = bookedSlots.includes(slot);
+                      
+                      // For same-day bookings, require 2h minimum advance
+                      let isTooSoon = false;
+                      if (date && isToday(date)) {
+                        const now = new Date();
+                        const minTime = addHours(now, 2);
+                        const [h, m] = slot.split(":").map(Number);
+                        const slotTime = setMinutes(setHours(new Date(), h), m);
+                        isTooSoon = slotTime <= minTime;
+                      }
+                      
+                      const isDisabled = isBooked || isTooSoon;
                       return (
                         <button
                           type="button"
                           key={slot}
-                          disabled={isBooked}
+                          disabled={isDisabled}
                           onClick={() => setTime(slot)}
                           className={cn(
                             "py-2 rounded-md border text-sm font-medium transition-all",
-                            isBooked
+                            isDisabled
                               ? "border-border bg-muted text-muted-foreground opacity-50 cursor-not-allowed line-through"
                               : time === slot
                                 ? "border-primary bg-primary text-primary-foreground"

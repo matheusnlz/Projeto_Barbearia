@@ -297,9 +297,15 @@ const Agendar = () => {
                     })}
                   </div>
                 )}
-                {bookedSlots.length > 0 && !loadingSlots && (
+                {!loadingSlots && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    Horários riscados já estão reservados para {selectedBarber}
+                    {date && isToday(date)
+                      ? "Para hoje, agendamentos com no mínimo 2 horas de antecedência. "
+                      : ""}
+                    {bookedSlots.length > 0
+                      ? `Horários riscados já estão reservados para ${selectedBarber}.`
+                      : ""}
+                    A barbearia não funciona aos domingos e segundas-feiras.
                   </p>
                 )}
               </motion.div>

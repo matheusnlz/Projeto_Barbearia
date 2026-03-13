@@ -238,7 +238,11 @@ const Agendar = () => {
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    disabled={(d) => d < new Date() || d.getDay() === 0}
+                    disabled={(d) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return d < today || d.getDay() === 0 || d.getDay() === 1;
+                    }}
                     className="p-3 pointer-events-auto bg-popover"
                   />
                 </PopoverContent>

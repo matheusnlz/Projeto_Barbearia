@@ -125,6 +125,7 @@ const Admin = () => {
           )}
           {activeTab === "barber-agenda" && <AdminBarberAgenda appointments={appointments} />}
           {activeTab === "services" && <AdminServices />}
+          {activeTab === "clients" && <AdminClients />}
         </div>
       </section>
 

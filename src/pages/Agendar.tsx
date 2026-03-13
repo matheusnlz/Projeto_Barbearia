@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, isToday, addHours, setHours, setMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Check, Loader2, User } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -238,7 +238,11 @@ const Agendar = () => {
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    disabled={(d) => d < new Date() || d.getDay() === 0}
+                    disabled={(d) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return d < today || d.getDay() === 0 || d.getDay() === 1;
+                    }}
                     className="p-3 pointer-events-auto bg-popover"
                   />
                 </PopoverContent>
@@ -260,15 +264,27 @@ const Agendar = () => {
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                     {ALL_TIME_SLOTS.map((slot) => {
                       const isBooked = bookedSlots.includes(slot);
+                      
+                      // For same-day bookings, require 2h minimum advance
+                      let isTooSoon = false;
+                      if (date && isToday(date)) {
+                        const now = new Date();
+                        const minTime = addHours(now, 2);
+                        const [h, m] = slot.split(":").map(Number);
+                        const slotTime = setMinutes(setHours(new Date(), h), m);
+                        isTooSoon = slotTime <= minTime;
+                      }
+                      
+                      const isDisabled = isBooked || isTooSoon;
                       return (
                         <button
                           type="button"
                           key={slot}
-                          disabled={isBooked}
+                          disabled={isDisabled}
                           onClick={() => setTime(slot)}
                           className={cn(
                             "py-2 rounded-md border text-sm font-medium transition-all",
-                            isBooked
+                            isDisabled
                               ? "border-border bg-muted text-muted-foreground opacity-50 cursor-not-allowed line-through"
                               : time === slot
                                 ? "border-primary bg-primary text-primary-foreground"
@@ -281,9 +297,15 @@ const Agendar = () => {
                     })}
                   </div>
                 )}
-                {bookedSlots.length > 0 && !loadingSlots && (
+                {!loadingSlots && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    Horários riscados já estão reservados para {selectedBarber}
+                    {date && isToday(date)
+                      ? "Para hoje, agendamentos com no mínimo 2 horas de antecedência. "
+                      : ""}
+                    {bookedSlots.length > 0
+                      ? `Horários riscados já estão reservados para ${selectedBarber}.`
+                      : ""}
+                    A barbearia não funciona aos domingos e segundas-feiras.
                   </p>
                 )}
               </motion.div>

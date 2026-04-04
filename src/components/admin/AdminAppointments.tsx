@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Trash2, Loader2 } from "lucide-react";
-import { barbers } from "@/data/barbers";
+import { useBarbers } from "@/hooks/useBarbers";
 import { cn } from "@/lib/utils";
 
 interface Appointment {
@@ -21,6 +22,7 @@ interface AdminAppointmentsProps {
 
 const AdminAppointments = ({ appointments, loading, onDelete }: AdminAppointmentsProps) => {
   const [filterBarber, setFilterBarber] = useState("");
+  const { barbers, loading: loadingBarbers } = useBarbers();
 
   const filtered = filterBarber
     ? appointments.filter((a) => a.barber_name === filterBarber)
@@ -52,7 +54,7 @@ const AdminAppointments = ({ appointments, loading, onDelete }: AdminAppointment
         ))}
       </div>
 
-      {loading ? (
+      {loading || loadingBarbers ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando agendamentos...
         </div>
@@ -87,5 +89,4 @@ const AdminAppointments = ({ appointments, loading, onDelete }: AdminAppointment
   );
 };
 
-import { useState } from "react";
 export default AdminAppointments;

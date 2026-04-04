@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { format, isToday, isBefore, addHours, startOfToday, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Check, Loader2, Scissors, User, Phone, Mail } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { CalendarIcon, Check, Loader2, Scissors, User, Phone, Mail, ChevronRight } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -38,6 +38,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const Agendar = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const preselectedService = searchParams.get("servico") || "";
   
   const { services, loading: loadingServices } = useServices();
@@ -48,6 +49,7 @@ const Agendar = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [step, setStep] = useState(1);
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -142,7 +144,6 @@ const Agendar = () => {
     return true;
   };
 
-  // Bloquear domingos (0) e segundas (1)
   const disabledDays = (date: Date) => {
     const day = getDay(date);
     return day === 0 || day === 1 || isBefore(date, startOfToday());
@@ -169,6 +170,7 @@ const Agendar = () => {
               setSubmitted(false);
               reset();
               setDate(undefined);
+              setStep(1);
             }}
             className="bg-primary text-primary-foreground px-8 py-3 rounded-sm text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
           >
@@ -191,49 +193,86 @@ const Agendar = () => {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Step 1: Barber & Service */}
+            {/* Step 1: Barber Selection (Visual Refactor) */}
             <div className="bg-card border border-border rounded-xl p-6 space-y-6">
               <h3 className="font-display text-xl font-semibold flex items-center gap-2">
-                <Scissors className="h-5 w-5 text-primary" /> 1. Profissional e Serviço
+                <User className="h-5 w-5 text-primary" /> 1. Escolha o Profissional
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Barbeiro</label>
-                  <select 
-                    {...register("barber")}
-                    className={cn(
-                      "w-full p-3 rounded-lg border bg-background text-sm focus:outline-none transition-colors",
-                      errors.barber ? "border-destructive" : "border-border focus:border-primary"
-                    )}
-                  >
-                    <option value="">Selecione um barbeiro</option>
-                    {barbers.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
-                  </select>
-                  {errors.barber && <p className="text-destructive text-xs">{errors.barber.message}</p>}
+              {loadingBarbers ? (
+                <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {barbers.map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setValue("barber", b.name)}
+                      className={cn(
+                        "flex flex-col items-center gap-3 p-4 rounded-xl border transition-all duration-300",
+                        selectedBarber === b.name
+                          ? "bg-primary/10 border-primary shadow-gold"
+                          : "bg-background border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-12 h-12 rounded-full flex items-center justify-center font-display font-bold text-lg transition-colors",
+                        selectedBarber === b.name ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                      )}>
+                        {b.initials}
+                      </div>
+                      <span className={cn(
+                        "text-xs font-bold uppercase tracking-wider",
+                        selectedBarber === b.name ? "text-primary" : "text-muted-foreground"
+                      )}>{b.name}</span>
+                    </button>
+                  ))}
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Serviço</label>
-                  <select 
-                    {...register("service")}
-                    className={cn(
-                      "w-full p-3 rounded-lg border bg-background text-sm focus:outline-none transition-colors",
-                      errors.service ? "border-destructive" : "border-border focus:border-primary"
-                    )}
-                  >
-                    <option value="">Selecione um serviço</option>
-                    {services.map(s => <option key={s.id} value={s.id}>{s.name} - R$ {Number(s.price).toFixed(0)}</option>)}
-                  </select>
-                  {errors.service && <p className="text-destructive text-xs">{errors.service.message}</p>}
-                </div>
-              </div>
+              )}
+              {errors.barber && <p className="text-destructive text-xs">{errors.barber.message}</p>}
             </div>
 
-            {/* Step 2: Date & Time */}
+            {/* Step 2: Service Selection */}
             <div className="bg-card border border-border rounded-xl p-6 space-y-6">
               <h3 className="font-display text-xl font-semibold flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5 text-primary" /> 2. Data e Horário
+                <Scissors className="h-5 w-5 text-primary" /> 2. Selecione o Serviço
+              </h3>
+              
+              {loadingServices ? (
+                <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2">
+                  {services.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setValue("service", s.id)}
+                      className={cn(
+                        "flex items-center justify-between p-4 rounded-lg border text-left transition-all",
+                        selectedService === s.id
+                          ? "bg-primary/5 border-primary"
+                          : "bg-background border-border hover:border-primary/30"
+                      )}
+                    >
+                      <div>
+                        <p className="font-semibold text-sm">{s.name}</p>
+                        <p className="text-xs text-muted-foreground">{s.duration} min</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-primary font-bold">R$ {Number(s.price).toFixed(0)}</p>
+                        {selectedService === s.id && <Check className="h-4 w-4 text-primary ml-auto mt-1" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {errors.service && <p className="text-destructive text-xs">{errors.service.message}</p>}
+            </div>
+
+            {/* Step 3: Date & Time */}
+            <div className="bg-card border border-border rounded-xl p-6 space-y-6">
+              <h3 className="font-display text-xl font-semibold flex items-center gap-2">
+                <CalendarIcon className="h-5 w-5 text-primary" /> 3. Data e Horário
               </h3>
 
               <div className="space-y-4">
@@ -266,48 +305,55 @@ const Agendar = () => {
                   </Popover>
                 </div>
 
-                {date && selectedBarber && (
-                  <div className="space-y-3">
-                    <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground block">Horários Disponíveis</label>
-                    {loadingSlots ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Carregando horários...
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                        {ALL_TIME_SLOTS.map((t) => {
-                          const available = isSlotAvailable(t);
-                          return (
-                            <button
-                              key={t}
-                              type="button"
-                              disabled={!available}
-                              onClick={() => setValue("time", t)}
-                              className={cn(
-                                "py-2 rounded-md text-xs font-bold transition-all border",
-                                !available 
-                                  ? "bg-secondary/50 text-muted-foreground/30 border-transparent cursor-not-allowed" 
-                                  : selectedTime === t
-                                    ? "bg-primary text-primary-foreground border-primary"
-                                    : "bg-background border-border hover:border-primary text-foreground"
-                              )}
-                            >
-                              {t}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {errors.time && <p className="text-destructive text-xs">{errors.time.message}</p>}
-                  </div>
-                )}
+                <AnimatePresence>
+                  {date && selectedBarber && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-3 overflow-hidden"
+                    >
+                      <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground block">Horários Disponíveis</label>
+                      {loadingSlots ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Carregando horários...
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                          {ALL_TIME_SLOTS.map((t) => {
+                            const available = isSlotAvailable(t);
+                            return (
+                              <button
+                                key={t}
+                                type="button"
+                                disabled={!available}
+                                onClick={() => setValue("time", t)}
+                                className={cn(
+                                  "py-2 rounded-md text-xs font-bold transition-all border",
+                                  !available 
+                                    ? "bg-secondary/50 text-muted-foreground/30 border-transparent cursor-not-allowed" 
+                                    : selectedTime === t
+                                      ? "bg-primary text-primary-foreground border-primary"
+                                      : "bg-background border-border hover:border-primary text-foreground"
+                                )}
+                              >
+                                {t}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {errors.time && <p className="text-destructive text-xs">{errors.time.message}</p>}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
-            {/* Step 3: Personal Info */}
+            {/* Step 4: Personal Info */}
             <div className="bg-card border border-border rounded-xl p-6 space-y-6">
               <h3 className="font-display text-xl font-semibold flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" /> 3. Seus Dados
+                <User className="h-5 w-5 text-primary" /> 4. Seus Dados
               </h3>
 
               <div className="space-y-4">

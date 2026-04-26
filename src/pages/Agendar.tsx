@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
-import { format, isToday, isBefore, addHours, startOfToday, getDay } from "date-fns";
+import { format, isToday, addHours, setHours, setMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Check, Loader2, Scissors, User, Phone, Mail } from "lucide-react";
+import { CalendarIcon, Check, Loader2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useServices } from "@/hooks/useServices";
-import { useBarbers } from "@/hooks/useBarbers";
+import { defaultServices } from "@/data/services";
+import { barbers } from "@/data/barbers";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -25,51 +21,45 @@ const ALL_TIME_SLOTS = [
   "18:00","18:30","19:00","19:30",
 ];
 
-const formSchema = z.object({
-  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
-  phone: z.string().min(10, "Telefone inválido").max(15, "Telefone inválido"),
-  email: z.string().email("E-mail inválido"),
-  barber: z.string().min(1, "Selecione um barbeiro"),
-  service: z.string().min(1, "Selecione um serviço"),
-  time: z.string().min(1, "Selecione um horário"),
-});
+const validatePhone = (phone: string) => {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10 || digits.length === 11;
+};
 
-type FormValues = z.infer<typeof formSchema>;
+const validateEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
 
 const Agendar = () => {
   const [searchParams] = useSearchParams();
-  const preselectedService = searchParams.get("servico") || "";
-  
-  const { services, loading: loadingServices } = useServices();
-  const { barbers, loading: loadingBarbers } = useBarbers();
-  
-  const [date, setDate] = useState<Date | undefined>(undefined);
+  const preselected = searchParams.get("servico") || "";
+
+  const [selectedBarber, setSelectedBarber] = useState("");
+  const [selectedService, setSelectedService] = useState(preselected);
+  const [date, setDate] = useState<Date>();
+  const [time, setTime] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ phone?: string; email?: string }>({});
 
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      service: preselectedService,
-      time: "",
-      barber: "",
-    }
-  });
-
-  const selectedBarber = watch("barber");
-  const selectedTime = watch("time");
-  const selectedService = watch("service");
-
-  // Fetch booked slots when date or barber changes
   useEffect(() => {
     if (!date || !selectedBarber) return;
-    
-    setValue("time", "");
+    setTime("");
     setLoadingSlots(true);
+
     const dateStr = format(date, "yyyy-MM-dd");
-    
     supabase
       .from("appointments")
       .select("appointment_time")
@@ -85,27 +75,36 @@ const Agendar = () => {
         }
         setLoadingSlots(false);
       });
-  }, [date, selectedBarber, setValue]);
+  }, [date, selectedBarber]);
 
-  const onSubmit = async (values: FormValues) => {
-    if (!date) {
-      toast.error("Selecione uma data");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newErrors: { phone?: string; email?: string } = {};
+    if (!validatePhone(phone)) newErrors.phone = "Digite um telefone válido";
+    if (!validateEmail(email)) newErrors.email = "Digite um e-mail válido";
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) return;
+
+    if (!selectedBarber || !selectedService || !date || !time || !name.trim()) {
+      toast.error("Preencha todos os campos");
       return;
     }
 
     setSubmitting(true);
-    const service = services.find((s) => s.id === values.service);
+    const service = defaultServices.find((s) => s.id === selectedService);
     const dateStr = format(date, "yyyy-MM-dd");
 
     const { error } = await supabase.from("appointments").insert({
-      service_id: values.service,
+      service_id: selectedService,
       service_name: service?.name || "",
       appointment_date: dateStr,
-      appointment_time: values.time,
-      client_name: values.name.trim(),
-      client_phone: values.phone.replace(/\D/g, ""),
-      client_email: values.email.trim().toLowerCase(),
-      barber_name: values.barber,
+      appointment_time: time,
+      client_name: name.trim(),
+      client_phone: phone.replace(/\D/g, ""),
+      client_email: email.trim().toLowerCase(),
+      barber_name: selectedBarber,
       status: "confirmed",
     });
 
@@ -114,8 +113,8 @@ const Agendar = () => {
     if (error) {
       if (error.code === "23505") {
         toast.error("Este horário já foi reservado. Escolha outro.");
-        setBookedSlots((prev) => [...prev, values.time]);
-        setValue("time", "");
+        setBookedSlots((prev) => [...prev, time]);
+        setTime("");
       } else {
         toast.error("Erro ao agendar. Tente novamente.");
         console.error(error);
@@ -127,25 +126,17 @@ const Agendar = () => {
     toast.success("Agendamento confirmado!");
   };
 
-  const isSlotAvailable = (time: string) => {
-    if (bookedSlots.includes(time)) return false;
-    
-    if (date && isToday(date)) {
-      const [hours, minutes] = time.split(":").map(Number);
-      const slotDate = addHours(startOfToday(), hours);
-      slotDate.setMinutes(minutes);
-      
-      // Regra: 2 horas de antecedência
-      return isBefore(addHours(new Date(), 2), slotDate);
-    }
-    
-    return true;
-  };
-
-  // Bloquear domingos (0) e segundas (1)
-  const disabledDays = (date: Date) => {
-    const day = getDay(date);
-    return day === 0 || day === 1 || isBefore(date, startOfToday());
+  const resetForm = () => {
+    setSubmitted(false);
+    setSelectedBarber("");
+    setSelectedService("");
+    setDate(undefined);
+    setTime("");
+    setName("");
+    setPhone("");
+    setEmail("");
+    setBookedSlots([]);
+    setErrors({});
   };
 
   if (submitted) {
@@ -160,17 +151,17 @@ const Agendar = () => {
           >
             <Check className="h-10 w-10 text-primary-foreground" />
           </motion.div>
-          <h2 className="font-display text-3xl font-bold mb-4">Agendamento Realizado!</h2>
-          <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-            Tudo certo! Seu horário foi reservado com sucesso. Enviamos os detalhes para o seu e-mail.
+          <h1 className="font-display text-3xl font-bold mb-4">Agendamento Confirmado!</h1>
+          <p className="text-muted-foreground mb-1">
+            Barbeiro: <span className="text-foreground font-semibold">{selectedBarber}</span>
           </p>
+          <p className="text-muted-foreground mb-2">
+            {defaultServices.find((s) => s.id === selectedService)?.name} — {date && format(date, "dd/MM/yyyy")} às {time}
+          </p>
+          <p className="text-muted-foreground text-sm mb-8">Esperamos você, {name}!</p>
           <button
-            onClick={() => {
-              setSubmitted(false);
-              reset();
-              setDate(undefined);
-            }}
-            className="bg-primary text-primary-foreground px-8 py-3 rounded-sm text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
+            onClick={resetForm}
+            className="bg-gold-gradient text-primary-foreground px-8 py-3 rounded-sm text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
           >
             Novo Agendamento
           </button>
@@ -183,179 +174,221 @@ const Agendar = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+
       <section className="pt-28 pb-20">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="text-center mb-10">
-            <p className="text-primary uppercase tracking-[0.3em] text-xs font-semibold mb-3">Reserve seu horário</p>
-            <h1 className="font-display text-4xl font-bold">Agendamento <span className="text-gold-gradient">Online</span></h1>
+            <p className="text-primary uppercase tracking-[0.3em] text-xs font-semibold mb-3">Agendamento</p>
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
+              Agende seu <span className="text-gold-gradient">Horário</span>
+            </h1>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Step 1: Barber & Service */}
-            <div className="bg-card border border-border rounded-xl p-6 space-y-6">
-              <h3 className="font-display text-xl font-semibold flex items-center gap-2">
-                <Scissors className="h-5 w-5 text-primary" /> 1. Profissional e Serviço
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Barbeiro</label>
-                  <select 
-                    {...register("barber")}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Barber Selection */}
+            <div>
+              <label className="block text-sm font-semibold mb-3 uppercase tracking-wider">Barbeiro</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {barbers.map((barber) => (
+                  <button
+                    type="button"
+                    key={barber.id}
+                    onClick={() => {
+                      setSelectedBarber(barber.name);
+                      setTime("");
+                    }}
                     className={cn(
-                      "w-full p-3 rounded-lg border bg-background text-sm focus:outline-none transition-colors",
-                      errors.barber ? "border-destructive" : "border-border focus:border-primary"
+                      "flex flex-col items-center gap-2 p-4 rounded-lg border transition-all",
+                      selectedBarber === barber.name
+                        ? "border-primary bg-primary/10 shadow-gold"
+                        : "border-border bg-card hover:border-primary/30"
                     )}
                   >
-                    <option value="">Selecione um barbeiro</option>
-                    {barbers.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
-                  </select>
-                  {errors.barber && <p className="text-destructive text-xs">{errors.barber.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Serviço</label>
-                  <select 
-                    {...register("service")}
-                    className={cn(
-                      "w-full p-3 rounded-lg border bg-background text-sm focus:outline-none transition-colors",
-                      errors.service ? "border-destructive" : "border-border focus:border-primary"
-                    )}
-                  >
-                    <option value="">Selecione um serviço</option>
-                    {services.map(s => <option key={s.id} value={s.id}>{s.name} - R$ {Number(s.price).toFixed(0)}</option>)}
-                  </select>
-                  {errors.service && <p className="text-destructive text-xs">{errors.service.message}</p>}
-                </div>
+                    <div className={cn(
+                      "w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold transition-colors",
+                      selectedBarber === barber.name
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-secondary-foreground"
+                    )}>
+                      {barber.initials}
+                    </div>
+                    <span className="font-semibold text-sm">{barber.name}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Step 2: Date & Time */}
-            <div className="bg-card border border-border rounded-xl p-6 space-y-6">
-              <h3 className="font-display text-xl font-semibold flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5 text-primary" /> 2. Data e Horário
-              </h3>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground block">Data</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "w-full flex items-center justify-between p-3 rounded-lg border bg-background text-sm transition-colors",
-                          !date ? "text-muted-foreground" : "text-foreground",
-                          "border-border hover:border-primary"
-                        )}
-                      >
-                        {date ? format(date, "PPP", { locale: ptBR }) : "Escolha uma data"}
-                        <CalendarIcon className="h-4 w-4 opacity-50" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        disabled={disabledDays}
-                        initialFocus
-                        locale={ptBR}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {date && selectedBarber && (
-                  <div className="space-y-3">
-                    <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground block">Horários Disponíveis</label>
-                    {loadingSlots ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Carregando horários...
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                        {ALL_TIME_SLOTS.map((t) => {
-                          const available = isSlotAvailable(t);
-                          return (
-                            <button
-                              key={t}
-                              type="button"
-                              disabled={!available}
-                              onClick={() => setValue("time", t)}
-                              className={cn(
-                                "py-2 rounded-md text-xs font-bold transition-all border",
-                                !available 
-                                  ? "bg-secondary/50 text-muted-foreground/30 border-transparent cursor-not-allowed" 
-                                  : selectedTime === t
-                                    ? "bg-primary text-primary-foreground border-primary"
-                                    : "bg-background border-border hover:border-primary text-foreground"
-                              )}
-                            >
-                              {t}
-                            </button>
-                          );
-                        })}
-                      </div>
+            {/* Service */}
+            <div>
+              <label className="block text-sm font-semibold mb-3 uppercase tracking-wider">Serviço</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {defaultServices.map((service) => (
+                  <button
+                    type="button"
+                    key={service.id}
+                    onClick={() => setSelectedService(service.id)}
+                    className={cn(
+                      "p-4 rounded-lg border text-left transition-all",
+                      selectedService === service.id
+                        ? "border-primary bg-primary/10 shadow-gold"
+                        : "border-border bg-card hover:border-primary/30"
                     )}
-                    {errors.time && <p className="text-destructive text-xs">{errors.time.message}</p>}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-sm">{service.name}</span>
+                      <span className="text-primary font-bold text-sm">R$ {service.price}</span>
+                    </div>
+                    <span className="text-muted-foreground text-xs">{service.duration} min</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="block text-sm font-semibold mb-3 uppercase tracking-wider">Data</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "w-full flex items-center gap-2 p-3 rounded-lg border bg-card text-left text-sm",
+                      date ? "border-primary" : "border-border text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="h-4 w-4 text-primary" />
+                    {date ? format(date, "dd 'de' MMMM, yyyy", { locale: ptBR }) : "Selecione uma data"}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    disabled={(d) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return d < today || d.getDay() === 0 || d.getDay() === 1;
+                    }}
+                    className="p-3 pointer-events-auto bg-popover"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Time */}
+            {date && selectedBarber && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                <label className="block text-sm font-semibold mb-3 uppercase tracking-wider">
+                  Horários de {selectedBarber}
+                </label>
+                {loadingSlots ? (
+                  <div className="flex items-center justify-center py-6 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    Carregando horários...
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {ALL_TIME_SLOTS.map((slot) => {
+                      const isBooked = bookedSlots.includes(slot);
+                      let isTooSoon = false;
+                      if (date && isToday(date)) {
+                        const now = new Date();
+                        const minTime = addHours(now, 2);
+                        const [h, m] = slot.split(":").map(Number);
+                        const slotTime = setMinutes(setHours(new Date(), h), m);
+                        isTooSoon = slotTime <= minTime;
+                      }
+                      const isDisabled = isBooked || isTooSoon;
+                      return (
+                        <button
+                          type="button"
+                          key={slot}
+                          disabled={isDisabled}
+                          onClick={() => setTime(slot)}
+                          className={cn(
+                            "py-2 rounded-md border text-sm font-medium transition-all",
+                            isDisabled
+                              ? "border-border bg-muted text-muted-foreground opacity-50 cursor-not-allowed line-through"
+                              : time === slot
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-card text-foreground hover:border-primary/30"
+                          )}
+                        >
+                          {slot}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
+                {!loadingSlots && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {date && isToday(date)
+                      ? "Para hoje, agendamentos com no mínimo 2 horas de antecedência. "
+                      : ""}
+                    {bookedSlots.length > 0
+                      ? `Horários riscados já estão reservados para ${selectedBarber}.`
+                      : ""}
+                    A barbearia não funciona aos domingos e segundas-feiras.
+                  </p>
+                )}
+              </motion.div>
+            )}
+
+            {date && !selectedBarber && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Selecione um barbeiro para ver os horários disponíveis
+              </p>
+            )}
+
+            {/* Client info */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2 uppercase tracking-wider">Nome</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Seu nome completo"
+                  maxLength={100}
+                  className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                />
               </div>
-            </div>
-
-            {/* Step 3: Personal Info */}
-            <div className="bg-card border border-border rounded-xl p-6 space-y-6">
-              <h3 className="font-display text-xl font-semibold flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" /> 3. Seus Dados
-              </h3>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                      {...register("name")}
-                      placeholder="Seu nome completo"
-                      className={cn(
-                        "w-full pl-10 p-3 rounded-lg border bg-background text-sm focus:outline-none transition-colors",
-                        errors.name ? "border-destructive" : "border-border focus:border-primary"
-                      )}
-                    />
-                  </div>
-                  {errors.name && <p className="text-destructive text-xs">{errors.name.message}</p>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 uppercase tracking-wider">Telefone</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(formatPhone(e.target.value));
+                      if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }));
+                    }}
+                    placeholder="(11) 99999-9999"
+                    className={cn(
+                      "w-full p-3 rounded-lg border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition-colors",
+                      errors.phone ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
+                    )}
+                  />
+                  {errors.phone && <p className="text-destructive text-xs mt-1">{errors.phone}</p>}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input
-                        {...register("phone")}
-                        placeholder="(00) 00000-0000"
-                        className={cn(
-                          "w-full pl-10 p-3 rounded-lg border bg-background text-sm focus:outline-none transition-colors",
-                          errors.phone ? "border-destructive" : "border-border focus:border-primary"
-                        )}
-                      />
-                    </div>
-                    {errors.phone && <p className="text-destructive text-xs">{errors.phone.message}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input
-                        {...register("email")}
-                        placeholder="seu@email.com"
-                        className={cn(
-                          "w-full pl-10 p-3 rounded-lg border bg-background text-sm focus:outline-none transition-colors",
-                          errors.email ? "border-destructive" : "border-border focus:border-primary"
-                        )}
-                      />
-                    </div>
-                    {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2 uppercase tracking-wider">E-mail</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                    }}
+                    placeholder="seu@email.com"
+                    maxLength={255}
+                    className={cn(
+                      "w-full p-3 rounded-lg border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition-colors",
+                      errors.email ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
+                    )}
+                  />
+                  {errors.email && <p className="text-destructive text-xs mt-1">{errors.email}</p>}
                 </div>
               </div>
             </div>
@@ -363,14 +396,15 @@ const Agendar = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-4 rounded-xl text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg shadow-primary/20"
+              className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-4 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
-              {submitting ? "Processando..." : "Confirmar Agendamento"}
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {submitting ? "Agendando..." : "Confirmar Agendamento"}
             </button>
           </form>
         </div>
       </section>
+
       <Footer />
     </div>
   );

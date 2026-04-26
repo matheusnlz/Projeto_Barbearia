@@ -1,35 +1,29 @@
 import { useState } from "react";
-import { Lock, LogIn, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { Lock, LogIn } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { toast } from "sonner";
 
-const AdminLogin = () => {
-  const [email, setEmail] = useState("");
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "seujota2024";
+
+interface AdminLoginProps {
+  onLogin: () => void;
+}
+
+const AdminLogin = ({ onLogin }: AdminLoginProps) => {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Preencha todos os campos");
-      return;
-    }
-
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      toast.error("E-mail ou senha incorretos");
-      console.error("Login error:", error.message);
-    } else {
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+      sessionStorage.setItem("admin_auth", "true");
+      onLogin();
       toast.success("Bem-vindo, administrador!");
+    } else {
+      toast.error("Usuário ou senha incorretos");
     }
-    setLoading(false);
   };
 
   return (
@@ -45,12 +39,11 @@ const AdminLogin = () => {
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="E-mail"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Usuário"
             className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-            required
           />
           <input
             type="password"
@@ -58,15 +51,12 @@ const AdminLogin = () => {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Senha"
             className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-            required
           />
           <button
             type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-            {loading ? "Entrando..." : "Entrar"}
+            <LogIn className="h-4 w-4" /> Entrar
           </button>
         </form>
       </div>

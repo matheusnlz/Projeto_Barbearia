@@ -1,18 +1,16 @@
 import { motion } from "framer-motion";
-import { Clock, Loader2 } from "lucide-react";
+import { Clock, DollarSign } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useServices } from "@/hooks/useServices";
+import { defaultServices } from "@/data/services";
 import { Link } from "react-router-dom";
 import beardImg from "@/assets/beard-service.jpg";
 
 const Servicos = () => {
-  const { services, loading } = useServices();
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       {/* Hero */}
       <section className="pt-28 pb-16 relative">
         <div className="container mx-auto px-4 text-center">
@@ -29,44 +27,38 @@ const Servicos = () => {
       {/* Services Grid */}
       <section className="pb-20">
         <div className="container mx-auto px-4">
-          {loading ? (
-            <div className="flex justify-center py-20">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {services.map((service, i) => (
-                <motion.div
-                  key={service.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05, duration: 0.4 }}
-                  viewport={{ once: true }}
-                  className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-gold transition-all duration-300"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-display text-xl font-semibold">{service.name}</h3>
-                    <span className="text-primary font-bold text-xl">
-                      R$ {Number(service.price).toFixed(0)}
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {defaultServices.map((service, i) => (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.4 }}
+                viewport={{ once: true }}
+                className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-gold transition-all duration-300"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="font-display text-xl font-semibold">{service.name}</h3>
+                  <span className="text-primary font-bold text-xl">
+                    R$ {service.price}
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                    <Clock className="h-3.5 w-3.5" />
+                    {service.duration} min
                   </div>
-                  <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                      <Clock className="h-3.5 w-3.5" />
-                      {service.duration} min
-                    </div>
-                    <Link
-                      to={`/agendar?servico=${service.id}`}
-                      className="text-primary text-xs font-semibold uppercase tracking-wider hover:underline"
-                    >
-                      Agendar →
-                    </Link>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                  <Link
+                    to={`/agendar?servico=${service.id}`}
+                    className="text-primary text-xs font-semibold uppercase tracking-wider hover:underline"
+                  >
+                    Agendar →
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
 
           {/* CTA */}
           <div className="mt-16 relative rounded-lg overflow-hidden max-w-4xl mx-auto">
@@ -87,6 +79,7 @@ const Servicos = () => {
           </div>
         </div>
       </section>
+
       <Footer />
     </div>
   );

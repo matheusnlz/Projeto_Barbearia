@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import { LogOut, LayoutDashboard, Calendar, Scissors, Users, UserCheck, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
+import { LayoutDashboard, CalendarDays, Users, Scissors, LogOut, UserCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdminLogin from "@/components/admin/AdminLogin";
@@ -11,10 +8,13 @@ import AdminAppointments from "@/components/admin/AdminAppointments";
 import AdminBarberAgenda from "@/components/admin/AdminBarberAgenda";
 import AdminServices from "@/components/admin/AdminServices";
 import AdminClients from "@/components/admin/AdminClients";
-import type { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface Appointment {
   id: string;
+  service_id: string;
   service_name: string;
   appointment_date: string;
   appointment_time: string;
@@ -22,39 +22,24 @@ interface Appointment {
   client_phone: string;
   barber_name: string;
   status: string;
+  created_at: string;
 }
 
 type Tab = "dashboard" | "appointments" | "barber-agenda" | "services" | "clients";
 
-const tabs: { key: Tab; label: string; icon: any }[] = [
+const tabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "appointments", label: "Agendamentos", icon: Calendar },
-  { key: "barber-agenda", label: "Agenda por Barbeiro", icon: Users },
+  { key: "appointments", label: "Agendamentos", icon: CalendarDays },
+  { key: "barber-agenda", label: "Agenda Barbeiros", icon: Users },
   { key: "services", label: "Serviços", icon: Scissors },
   { key: "clients", label: "Clientes", icon: UserCheck },
 ];
 
 const Admin = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(() => sessionStorage.getItem("admin_auth") === "true");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
-
-  useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -74,8 +59,8 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    if (user) fetchAppointments();
-  }, [user]);
+    if (authenticated) fetchAppointments();
+  }, [authenticated]);
 
   const deleteAppointment = async (id: string) => {
     const { error } = await supabase.from("appointments").delete().eq("id", id);
@@ -87,30 +72,20 @@ const Admin = () => {
     }
   };
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Erro ao sair");
-    } else {
-      toast.success("Sessão encerrada");
-    }
+  const handleLogout = () => {
+    sessionStorage.removeItem("admin_auth");
+    setAuthenticated(false);
+    toast.success("Sessão encerrada");
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AdminLogin />;
+  if (!authenticated) {
+    return <AdminLogin onLogin={() => setAuthenticated(true)} />;
   }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+
       <section className="pt-28 pb-20">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex items-center justify-between mb-8">
@@ -153,6 +128,7 @@ const Admin = () => {
           {activeTab === "clients" && <AdminClients />}
         </div>
       </section>
+
       <Footer />
     </div>
   );

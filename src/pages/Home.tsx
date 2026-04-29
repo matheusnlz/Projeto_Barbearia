@@ -5,7 +5,7 @@ import AboutSection from "@/components/layout/AboutSection";
 import ContactSection from "@/components/layout/ContactSection";
 import Footer from "@/components/layout/Footer";
 
-const Index = () => {
+const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -18,4 +18,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Home;

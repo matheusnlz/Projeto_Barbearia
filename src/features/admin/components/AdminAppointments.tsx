@@ -1,5 +1,5 @@
 import { Trash2, Loader2 } from "lucide-react";
-import { barbers } from "@/data/barbers";
+import { barbers } from "@/features/barbers/services/barbersService";
 import { cn } from "@/lib/utils";
 
 interface Appointment {

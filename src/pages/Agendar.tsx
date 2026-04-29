@@ -6,13 +6,13 @@ import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { defaultServices } from "@/data/services";
-import { barbers } from "@/data/barbers";
+import { defaultServices } from "@/features/services/servicesService";
+import { barbers } from "@/features/barbers/services/barbersService";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 const ALL_TIME_SLOTS = [
   "09:00","09:30","10:00","10:30","11:00","11:30",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Edit2 } from "lucide-react";
-import { defaultServices, type Service } from "@/data/services";
+import { defaultServices, type Service } from "@/features/services/servicesService";
 import { toast } from "sonner";
 
 const AdminServices = () => {

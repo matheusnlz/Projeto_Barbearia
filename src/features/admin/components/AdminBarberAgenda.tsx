@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { barbers } from "@/data/barbers";
+import { barbers } from "@/features/barbers/services/barbersService";
 import { cn } from "@/lib/utils";
 
 interface Appointment {

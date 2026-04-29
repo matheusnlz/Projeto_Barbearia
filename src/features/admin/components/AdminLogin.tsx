@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Lock, LogIn } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
 
 const ADMIN_USER = "admin";

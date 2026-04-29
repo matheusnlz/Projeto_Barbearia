@@ -1,8 +1,4 @@
-export interface Barber {
-  id: string;
-  name: string;
-  initials: string;
-}
+import type { Barber } from "../types";
 
 export const barbers: Barber[] = [
   { id: "jullian", name: "Jullian", initials: "JU" },

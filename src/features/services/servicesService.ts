@@ -1,10 +1,4 @@
-export interface Service {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: number; // minutes
-}
+import type { Service } from "./types";
 
 export const defaultServices: Service[] = [
   { id: "1", name: "Corte", description: "Corte moderno personalizado de acordo com seu estilo", price: 40, duration: 30 },
@@ -16,3 +10,6 @@ export const defaultServices: Service[] = [
   { id: "7", name: "Corte + Luzes", description: "Combo de corte com coloração e mechas", price: 130, duration: 100 },
   { id: "8", name: "Corte + Barba + Sobrancelha", description: "Pacote completo: corte, barba e sobrancelha", price: 80, duration: 60 },
 ];
+
+export const getServiceById = (id: string): Service | undefined =>
+  defaultServices.find((s) => s.id === id);

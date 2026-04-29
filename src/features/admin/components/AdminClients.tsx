@@ -1,24 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Users, Search, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
-
-interface AppointmentRecord {
-  id: string;
-  service_name: string;
-  barber_name: string;
-  appointment_date: string;
-  appointment_time: string;
-  status: string;
-}
-
-interface ClientGroup {
-  client_name: string;
-  client_phone: string;
-  client_email: string;
-  visits: number;
-  appointments: AppointmentRecord[];
-}
+import {
+  fetchClientsGrouped,
+  type ClientGroup,
+} from "@/features/clients/services/clientsService";
 
 const AdminClients = () => {
   const [clients, setClients] = useState<ClientGroup[]>([]);
@@ -27,57 +13,19 @@ const AdminClients = () => {
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchClients();
-  }, []);
-
-  const fetchClients = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .order("appointment_date", { ascending: false })
-      .order("appointment_time", { ascending: false });
-
-    if (error) {
-      console.error(error);
-      setLoading(false);
-      return;
-    }
-
-    // Group by email or phone
-    const groupMap = new Map<string, ClientGroup>();
-    for (const apt of data || []) {
-      const key = (apt.client_email && apt.client_email !== "") 
-        ? apt.client_email.toLowerCase() 
-        : apt.client_phone;
-      
-      if (!groupMap.has(key)) {
-        groupMap.set(key, {
-          client_name: apt.client_name,
-          client_phone: apt.client_phone,
-          client_email: apt.client_email || "",
-          visits: 0,
-          appointments: [],
-        });
-      }
-      const group = groupMap.get(key)!;
-      group.visits++;
-      // Keep latest name
-      if (apt.client_name) group.client_name = apt.client_name;
-      group.appointments.push({
-        id: apt.id,
-        service_name: apt.service_name,
-        barber_name: apt.barber_name,
-        appointment_date: apt.appointment_date,
-        appointment_time: apt.appointment_time,
-        status: apt.status,
+    let cancelled = false;
+    fetchClientsGrouped()
+      .then((data) => {
+        if (!cancelled) setClients(data);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
-    }
-
-    const sorted = Array.from(groupMap.values()).sort((a, b) => b.visits - a.visits);
-    setClients(sorted);
-    setLoading(false);
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtered = search.trim()
     ? clients.filter(

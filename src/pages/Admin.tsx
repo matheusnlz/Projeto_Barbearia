@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { LayoutDashboard, CalendarDays, Users, Scissors, LogOut, UserCheck } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import AdminLogin from "@/components/admin/AdminLogin";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminAppointments from "@/components/admin/AdminAppointments";

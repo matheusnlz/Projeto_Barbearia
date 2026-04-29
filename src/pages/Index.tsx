@@ -1,9 +1,9 @@
-import Navbar from "@/components/Navbar";
-import HeroSection from "@/components/HeroSection";
-import ServicesPreview from "@/components/ServicesPreview";
-import AboutSection from "@/components/AboutSection";
-import ContactSection from "@/components/ContactSection";
-import Footer from "@/components/Footer";
+import Navbar from "@/components/layout/Navbar";
+import HeroSection from "@/components/layout/HeroSection";
+import ServicesPreview from "@/components/layout/ServicesPreview";
+import AboutSection from "@/components/layout/AboutSection";
+import ContactSection from "@/components/layout/ContactSection";
+import Footer from "@/components/layout/Footer";
 
 const Index = () => {
   return (

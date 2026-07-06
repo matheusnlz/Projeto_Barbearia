@@ -58,11 +58,11 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="E-mail"
-            autoComplete="email"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Usuário"
+            autoComplete="username"
             className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
           />
           <input

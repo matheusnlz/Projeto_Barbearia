@@ -5,7 +5,7 @@ export const fetchBookedSlots = async (
   date: string,
   barberName: string
 ): Promise<string[]> => {
-  const { data, error } = await supabase.rpc("get_booked_slots", {
+  const { data, error } = await (supabase.rpc as any)("get_booked_slots", {
     _date: date,
     _barber: barberName,
   });

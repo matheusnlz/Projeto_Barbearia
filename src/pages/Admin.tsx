@@ -22,13 +22,30 @@ const tabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
 ];
 
 const Admin = () => {
-  const { authenticated, login, logout } = useAdminAuth();
-  const { appointments, loading, removeAppointment } = useAdmin();
+  const { authenticated, checking, login, logout } = useAdminAuth();
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+
+  if (checking) {
+    return <div className="min-h-screen bg-background" />;
+  }
 
   if (!authenticated) {
     return <AdminLogin onLogin={login} />;
   }
+
+  return <AdminAuthenticated logout={logout} activeTab={activeTab} setActiveTab={setActiveTab} />;
+};
+
+const AdminAuthenticated = ({
+  logout,
+  activeTab,
+  setActiveTab,
+}: {
+  logout: () => void;
+  activeTab: Tab;
+  setActiveTab: (t: Tab) => void;
+}) => {
+  const { appointments, loading, removeAppointment } = useAdmin();
 
   return (
     <div className="min-h-screen bg-background">

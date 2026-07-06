@@ -9,21 +9,23 @@ interface AdminLoginProps {
   onLogin: () => void;
 }
 
+const ADMIN_EMAIL_DOMAIN = "@seujota.local";
+
 const AdminLogin = ({ onLogin }: AdminLoginProps) => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const email = `${username.trim().toLowerCase()}${ADMIN_EMAIL_DOMAIN}`;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.session) {
       setLoading(false);
-      toast.error("E-mail ou senha incorretos");
+      toast.error("Usuário ou senha incorretos");
       return;
     }
-    // Verify admin role server-side via RLS-protected user_roles table
     const { data: role } = await supabase
       .from("user_roles")
       .select("role")

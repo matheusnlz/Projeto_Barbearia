@@ -5,18 +5,16 @@ export const fetchBookedSlots = async (
   date: string,
   barberName: string
 ): Promise<string[]> => {
-  const { data, error } = await supabase
-    .from("appointments")
-    .select("appointment_time")
-    .eq("appointment_date", date)
-    .eq("barber_name", barberName)
-    .eq("status", "confirmed");
+  const { data, error } = await (supabase.rpc as any)("get_booked_slots", {
+    _date: date,
+    _barber: barberName,
+  });
 
   if (error) {
     console.error("Erro ao buscar horários:", error);
     return [];
   }
-  return (data ?? []).map((r) => r.appointment_time);
+  return (data ?? []).map((r: { appointment_time: string }) => r.appointment_time);
 };
 
 export const createAppointment = async (input: NewAppointmentInput) => {

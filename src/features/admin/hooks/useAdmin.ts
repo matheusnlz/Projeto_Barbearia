@@ -1,27 +1,53 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabaseClient";
 import { adminService } from "../services/adminService";
 import type { Appointment } from "@/features/agendamento/types";
 
-const ADMIN_AUTH_KEY = "admin_auth";
-
 export const useAdminAuth = () => {
-  const [authenticated, setAuthenticated] = useState(
-    () => sessionStorage.getItem(ADMIN_AUTH_KEY) === "true"
-  );
+  const [authenticated, setAuthenticated] = useState(false);
+  const [checking, setChecking] = useState(true);
 
-  const login = () => {
-    sessionStorage.setItem(ADMIN_AUTH_KEY, "true");
-    setAuthenticated(true);
+  const verifyRole = async (userId: string | undefined) => {
+    if (!userId) return false;
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    return !error && !!data;
   };
 
-  const logout = () => {
-    sessionStorage.removeItem(ADMIN_AUTH_KEY);
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
+      setTimeout(async () => {
+        const ok = await verifyRole(session?.user?.id);
+        setAuthenticated(ok);
+        setChecking(false);
+      }, 0);
+    });
+
+    supabase.auth.getSession().then(async ({ data }) => {
+      const ok = await verifyRole(data.session?.user?.id);
+      setAuthenticated(ok);
+      setChecking(false);
+    });
+
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const login = () => {
+    // Session/role state is driven by onAuthStateChange; no-op kept for API compatibility.
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setAuthenticated(false);
     toast.success("Sessão encerrada");
   };
 
-  return { authenticated, login, logout };
+  return { authenticated, checking, login, logout };
 };
 
 export const useAdmin = () => {

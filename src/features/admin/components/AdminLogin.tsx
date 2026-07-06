@@ -3,27 +3,44 @@ import { Lock, LogIn } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
-
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "seujota2024";
+import { supabase } from "@/lib/supabaseClient";
 
 interface AdminLoginProps {
   onLogin: () => void;
 }
 
 const AdminLogin = ({ onLogin }: AdminLoginProps) => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
-      sessionStorage.setItem("admin_auth", "true");
-      onLogin();
-      toast.success("Bem-vindo, administrador!");
-    } else {
-      toast.error("Usuário ou senha incorretos");
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.session) {
+      setLoading(false);
+      toast.error("E-mail ou senha incorretos");
+      return;
     }
+    // Verify admin role server-side via RLS-protected user_roles table
+    const { data: role } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.session.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!role) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      toast.error("Esta conta não tem acesso administrativo");
+      return;
+    }
+
+    setLoading(false);
+    onLogin();
+    toast.success("Bem-vindo, administrador!");
   };
 
   return (
@@ -39,10 +56,11 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Usuário"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="E-mail"
+            autoComplete="email"
             className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
           />
           <input
@@ -50,13 +68,15 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Senha"
+            autoComplete="current-password"
             className="w-full p-3 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
           />
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 bg-gold-gradient text-primary-foreground py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity disabled:opacity-60"
           >
-            <LogIn className="h-4 w-4" /> Entrar
+            <LogIn className="h-4 w-4" /> {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
       </div>

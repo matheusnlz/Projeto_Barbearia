@@ -23,6 +23,9 @@ import { createAppointment } from "../services/appointmentsService";
 const AppointmentForm = () => {
   const [searchParams] = useSearchParams();
   const preselected = searchParams.get("servico") || "";
+  const { services } = useServices({ onlyActive: true });
+  const getServiceById = (id: string) => services.find((s) => s.id === id);
+
 
   const [selectedBarber, setSelectedBarber] = useState("");
   const [selectedService, setSelectedService] = useState(preselected);

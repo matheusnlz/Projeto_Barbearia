@@ -29,8 +29,11 @@ const Servicos = () => {
       {/* Services Grid */}
       <section className="pb-20">
         <div className="container mx-auto px-4">
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {defaultServices.map((service, i) => (
+            {services.map((service, i) => (
               <motion.div
                 key={service.id}
                 initial={{ opacity: 0, y: 20 }}

@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
-import { Clock, DollarSign } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { defaultServices } from "@/features/services/servicesService";
+import { useServices } from "@/features/services/hooks/useServices";
 import { Link } from "react-router-dom";
 import beardImg from "@/assets/beard-service.jpg";
 
 const Servicos = () => {
+  const { services, loading } = useServices({ onlyActive: true });
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -27,8 +29,11 @@ const Servicos = () => {
       {/* Services Grid */}
       <section className="pb-20">
         <div className="container mx-auto px-4">
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {defaultServices.map((service, i) => (
+            {services.map((service, i) => (
               <motion.div
                 key={service.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -59,6 +64,9 @@ const Servicos = () => {
               </motion.div>
             ))}
           </div>
+          )}
+
+
 
           {/* CTA */}
           <div className="mt-16 relative rounded-lg overflow-hidden max-w-4xl mx-auto">

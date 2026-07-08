@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Clock, DollarSign } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { defaultServices } from "@/features/services/servicesService";
+import { useServices } from "@/features/services/hooks/useServices";
 import { Link } from "react-router-dom";
 import beardImg from "@/assets/beard-service.jpg";
 

@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import beardImg from "@/assets/beard-service.jpg";
 
 const Servicos = () => {
+  const { services, loading } = useServices({ onlyActive: true });
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

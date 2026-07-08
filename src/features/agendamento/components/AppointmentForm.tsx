@@ -148,7 +148,7 @@ const AppointmentForm = () => {
           <div>
             <label className="block text-sm font-semibold mb-3 uppercase tracking-wider">Serviço</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {defaultServices.map((service) => (
+              {services.map((service) => (
                 <button
                   type="button"
                   key={service.id}

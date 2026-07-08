@@ -10,10 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-import {
-  defaultServices,
-  getServiceById,
-} from "@/features/services/servicesService";
+import { useServices } from "@/features/services/hooks/useServices";
 import { isDateDisabled } from "@/utils/timeSlots";
 import { validateEmail, validatePhone } from "@/utils/validators";
 import { formatPhone, onlyDigits } from "@/utils/format";

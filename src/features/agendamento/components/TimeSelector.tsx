@@ -60,7 +60,7 @@ const TimeSelector = ({
       )}
       {!loading && (
         <p className="text-xs text-muted-foreground mt-2">
-          {isToday(date) ? "Para hoje, agendamentos com no mínimo 2 horas de antecedência. " : ""}
+          {isToday(date) ? `Para hoje, agendamentos com no mínimo ${MIN_ADVANCE_MINUTES} minutos de antecedência. ` : ""}
           {bookedSlots.length > 0
             ? `Horários riscados já estão reservados para ${barberName}.`
             : ""}

@@ -21,7 +21,7 @@ const Navbar = () => {
         <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Barbearia Seu Jota" className="h-12 w-12 rounded-full object-cover" />
           <span className="font-rye text-xl text-foreground">
-            Seu <span className="text-gold-gradient">Jota</span>
+            SEU <span className="text-gold-gradient">JOTA</span>
           </span>
         </Link>
 

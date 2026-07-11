@@ -1,7 +1,7 @@
 import { isToday } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { ALL_TIME_SLOTS, isSlotTooSoon } from "@/utils/timeSlots";
+import { getSlotsForDate, isSlotTooSoon, MIN_ADVANCE_MINUTES } from "@/utils/timeSlots";
 import { cn } from "@/lib/utils";
 
 interface TimeSelectorProps {

@@ -29,14 +29,12 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           />
           <p className="text-primary uppercase tracking-[0.3em] text-sm font-semibold mb-4">
-            Barbearia Premium
+            Barbearia
           </p>
           <h1 className="font-rye text-5xl md:text-7xl lg:text-8xl mb-6 leading-tight text-foreground">
             Seu <span className="text-gold-gradient">Jota</span>
           </h1>
-          <p className="text-muted-foreground text-lg md:text-xl max-w-lg mx-auto mb-10 font-light">
-            Old school, moderno e aconchegante.
-          </p>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/agendar"

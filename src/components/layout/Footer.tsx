@@ -39,7 +39,7 @@ const Footer = () => {
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4 text-primary" />
-                (11) 93002-2620
+                (11) 96455-1343
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4 text-primary" />
@@ -47,7 +47,8 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 text-primary" />
-                Seg-Sáb: 9h - 20h
+                Ter-Sex: 9h30 - 19h30
+                Sáb: 9h - 18h
               </div>
             </div>
           </div>

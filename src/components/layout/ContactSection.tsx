@@ -14,7 +14,7 @@ const ContactSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <div className="space-y-6">
             {[
-              { icon: Phone, title: "Telefone", value: "(11) 93002-2620" },
+              { icon: Phone, title: "Telefone", value: "(11) 96455-1343" },
               { icon: MapPin, title: "Endereço", value: "Rua Álvaro Alvim, 519 - Paulicéia, São Bernardo do Campo - SP, 09693-000" },
               { icon: Clock, title: "Horário", value: "Seg-Sáb: 9h às 20h" },
             ].map((item) => (
@@ -30,7 +30,7 @@ const ContactSection = () => {
             ))}
 
             <a
-              href="https://wa.me/5511930022620"
+              href="https://wa.me/5511964551343"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full bg-gold-gradient text-primary-foreground py-3 rounded-lg font-semibold text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"

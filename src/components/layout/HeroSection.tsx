@@ -31,7 +31,7 @@ const HeroSection = () => {
           <p className="text-primary uppercase tracking-[0.3em] text-sm font-semibold mb-4">
             Barbearia Premium
           </p>
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight text-foreground">
+          <h1 className="font-rye text-5xl md:text-7xl lg:text-8xl mb-6 leading-tight text-foreground">
             Seu <span className="text-gold-gradient">Jota</span>
           </h1>
           <p className="text-muted-foreground text-lg md:text-xl max-w-lg mx-auto mb-10 font-light">

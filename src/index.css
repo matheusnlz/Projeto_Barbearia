@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Rye&display=swap');
+
+.font-rye { font-family: 'Rye', serif; font-weight: 400; font-style: normal; }
 
 @tailwind base;
 @tailwind components;

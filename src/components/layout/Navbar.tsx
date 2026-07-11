@@ -20,7 +20,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 flex items-center justify-between h-16 md:h-20">
         <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Barbearia Seu Jota" className="h-12 w-12 rounded-full object-cover" />
-          <span className="font-display text-xl font-bold text-foreground">
+          <span className="font-rye text-xl text-foreground">
             Seu <span className="text-gold-gradient">Jota</span>
           </span>
         </Link>

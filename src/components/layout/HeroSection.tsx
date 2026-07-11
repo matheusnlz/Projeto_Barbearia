@@ -35,16 +35,16 @@ const HeroSection = () => {
             Seu <span className="text-gold-gradient">Jota</span>
           </h1>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
             <Link
               to="/agendar"
-              className="bg-primary text-primary-foreground px-10 py-4 rounded-sm text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity inline-block"
+              className="bg-primary text-primary-foreground px-10 py-4 rounded-md text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity inline-block"
             >
               Agendar Horário
             </Link>
             <Link
               to="/servicos"
-              className="border border-primary text-primary px-10 py-4 rounded-sm text-sm font-bold uppercase tracking-wider hover:bg-primary hover:text-primary-foreground transition-colors inline-block"
+              className="border border-primary text-primary px-10 py-4 rounded-md text-sm font-bold uppercase tracking-wider hover:bg-primary hover:text-primary-foreground transition-colors inline-block"
             >
               Nossos Serviços
             </Link>

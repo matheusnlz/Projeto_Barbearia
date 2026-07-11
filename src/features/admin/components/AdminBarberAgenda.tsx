@@ -59,7 +59,7 @@ const AdminBarberAgenda = ({ appointments }: AdminBarberAgendaProps) => {
 
       {/* Time grid */}
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-        {TIME_SLOTS.map((time) => {
+        {getSlotsForDate(new Date(`${selectedDate}T00:00:00`)).map((time) => {
           const occupied = occupiedTimes.has(time);
           const apt = barberAppointments.find((a) => a.appointment_time === time);
           return (

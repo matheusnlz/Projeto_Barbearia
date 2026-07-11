@@ -1,19 +1,56 @@
-import { addHours, isToday, setHours, setMinutes } from "date-fns";
+import { addMinutes, isToday, setHours, setMinutes, setSeconds, setMilliseconds } from "date-fns";
 
-export const ALL_TIME_SLOTS = [
-  "09:00","09:30","10:00","10:30","11:00","11:30",
-  "12:00","12:30","13:00","13:30","14:00","14:30",
-  "15:00","15:30","16:00","16:30","17:00","17:30",
-  "18:00","18:30","19:00","19:30",
-];
+/**
+ * Regras de funcionamento da barbearia (fonte única de verdade):
+ * - Domingo (0) e Segunda (1): fechado.
+ * - Terça a Sexta (2-5): 09:30 às 19:30, intervalos de 30 min.
+ * - Sábado (6): 09:00 às 18:00, intervalos de 30 min.
+ * - Antecedência mínima para agendamento no mesmo dia: 30 minutos.
+ */
 
-/** Retorna true se o slot estiver a menos de 2 horas do horário atual (apenas para hoje). */
+export const MIN_ADVANCE_MINUTES = 30;
+
+const buildSlots = (startH: number, startM: number, endH: number, endM: number): string[] => {
+  const slots: string[] = [];
+  let h = startH;
+  let m = startM;
+  while (h < endH || (h === endH && m <= endM)) {
+    slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    m += 30;
+    if (m >= 60) {
+      m -= 60;
+      h += 1;
+    }
+  }
+  return slots;
+};
+
+const WEEKDAY_SLOTS = buildSlots(9, 30, 19, 30); // Tue-Fri
+const SATURDAY_SLOTS = buildSlots(9, 0, 18, 0);  // Sat
+
+/** Retorna os slots de horários disponíveis para o dia da semana da data. */
+export const getSlotsForDate = (date: Date): string[] => {
+  const day = date.getDay();
+  if (day === 0 || day === 1) return []; // Domingo/Segunda fechados
+  if (day === 6) return SATURDAY_SLOTS;
+  return WEEKDAY_SLOTS;
+};
+
+/** Compatibilidade: união de todos os horários possíveis da semana. */
+export const ALL_TIME_SLOTS = Array.from(
+  new Set([...WEEKDAY_SLOTS, ...SATURDAY_SLOTS])
+).sort();
+
+/** Retorna true se o slot estiver a menos de 30 minutos do horário atual (apenas para hoje). */
 export const isSlotTooSoon = (date: Date, slot: string): boolean => {
   if (!isToday(date)) return false;
-  const minTime = addHours(new Date(), 2);
+  const minTime = addMinutes(new Date(), MIN_ADVANCE_MINUTES);
   const [h, m] = slot.split(":").map(Number);
-  const slotTime = setMinutes(setHours(new Date(), h), m);
-  return slotTime <= minTime;
+  let slotTime = setHours(new Date(), h);
+  slotTime = setMinutes(slotTime, m);
+  slotTime = setSeconds(slotTime, 0);
+  slotTime = setMilliseconds(slotTime, 0);
+  return slotTime < minTime;
 };
 
 /** Domingo (0) e segunda (1) — barbearia fechada. Datas passadas também. */

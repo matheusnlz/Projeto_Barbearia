@@ -33,7 +33,7 @@ const TimeSelector = ({
         </div>
       ) : (
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-          {ALL_TIME_SLOTS.map((slot) => {
+          {getSlotsForDate(date).map((slot) => {
             const isBooked = bookedSlots.includes(slot);
             const tooSoon = isSlotTooSoon(date, slot);
             const isDisabled = isBooked || tooSoon;

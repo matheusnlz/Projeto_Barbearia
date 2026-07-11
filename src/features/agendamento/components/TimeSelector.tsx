@@ -1,7 +1,7 @@
 import { isToday } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { ALL_TIME_SLOTS, isSlotTooSoon } from "@/utils/timeSlots";
+import { getSlotsForDate, isSlotTooSoon, MIN_ADVANCE_MINUTES } from "@/utils/timeSlots";
 import { cn } from "@/lib/utils";
 
 interface TimeSelectorProps {
@@ -33,7 +33,7 @@ const TimeSelector = ({
         </div>
       ) : (
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-          {ALL_TIME_SLOTS.map((slot) => {
+          {getSlotsForDate(date).map((slot) => {
             const isBooked = bookedSlots.includes(slot);
             const tooSoon = isSlotTooSoon(date, slot);
             const isDisabled = isBooked || tooSoon;
@@ -60,7 +60,7 @@ const TimeSelector = ({
       )}
       {!loading && (
         <p className="text-xs text-muted-foreground mt-2">
-          {isToday(date) ? "Para hoje, agendamentos com no mínimo 2 horas de antecedência. " : ""}
+          {isToday(date) ? `Para hoje, agendamentos com no mínimo ${MIN_ADVANCE_MINUTES} minutos de antecedência. ` : ""}
           {bookedSlots.length > 0
             ? `Horários riscados já estão reservados para ${barberName}.`
             : ""}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { barbers } from "@/features/barbers/services/barbersService";
+import { getSlotsForDate } from "@/utils/timeSlots";
 import { cn } from "@/lib/utils";
 
 interface Appointment {
@@ -13,12 +14,6 @@ interface Appointment {
   status: string;
 }
 
-const TIME_SLOTS = [
-  "09:00","09:30","10:00","10:30","11:00","11:30",
-  "12:00","12:30","13:00","13:30","14:00","14:30",
-  "15:00","15:30","16:00","16:30","17:00","17:30",
-  "18:00","18:30","19:00","19:30",
-];
 
 interface AdminBarberAgendaProps {
   appointments: Appointment[];
@@ -64,7 +59,7 @@ const AdminBarberAgenda = ({ appointments }: AdminBarberAgendaProps) => {
 
       {/* Time grid */}
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-        {TIME_SLOTS.map((time) => {
+        {getSlotsForDate(new Date(`${selectedDate}T00:00:00`)).map((time) => {
           const occupied = occupiedTimes.has(time);
           const apt = barberAppointments.find((a) => a.appointment_time === time);
           return (
